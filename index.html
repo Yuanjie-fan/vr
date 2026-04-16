@@ -1,0 +1,362 @@
+ <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>“湘”遇红境 · VR沉浸式红色文旅体验 | 十步之内 必有芳草</title>
+    <!-- 字体 & 图标库 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', '思源黑体', system-ui, sans-serif;
+            background-color: #0a0604;
+            color: #f0ede8;
+            overflow-x: hidden;
+        }
+        #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; background: radial-gradient(circle at 20% 20%, #2e0e0a, #050101); }
+        .history-slider { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+        .history-slider .slide { position: absolute; width: 100%; height: 100%; background-size: cover; background-position: center; opacity: 0; transition: opacity 4s ease; background-blend-mode: overlay; }
+        .history-slider .slide.active { opacity: 0.2; }
+        .main-container { position: relative; z-index: 10; }
+        .glass-card { background: rgba(18, 10, 8, 0.7); backdrop-filter: blur(12px); border-radius: 2rem; border: 1px solid rgba(200, 48, 46, 0.5); box-shadow: 0 20px 35px -12px rgba(0,0,0,0.5); transition: transform 0.25s ease, box-shadow 0.3s; }
+        .glass-card:hover { transform: translateY(-4px); border-color: #C8102E; box-shadow: 0 25px 40px -12px rgba(200,48,46,0.4); }
+        .btn { display: inline-block; padding: 0.9rem 2rem; border-radius: 3rem; font-weight: 700; text-decoration: none; transition: all 0.25s ease; cursor: pointer; border: none; font-size: 1rem; }
+        .btn-primary { background: #C8102E; color: white; box-shadow: 0 6px 14px rgba(200,16,46,0.4); }
+        .btn-primary:hover { background: #a00d26; transform: scale(1.05); box-shadow: 0 10px 20px rgba(200,16,46,0.6); }
+        .btn-outline { background: transparent; border: 2px solid #C8102E; color: #f0ede8; }
+        .btn-outline:hover { background: #C8102E; transform: scale(1.05); color: white; }
+        .btn-gold { background: #d4af37; color: #2c1a0e; border: none; }
+        .btn-gold:hover { background: #c9a42b; transform: scale(1.03); }
+        section { padding: 5rem 2rem; max-width: 1400px; margin: 0 auto; }
+        .section-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 2rem; background: linear-gradient(135deg, #ffc371, #C8102E); background-clip: text; -webkit-background-clip: text; color: transparent; border-left: 5px solid #C8102E; padding-left: 1.2rem; }
+        .grid-3, .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 2rem; }
+        .flow-node { background: rgba(0,0,0,0.55); backdrop-filter: blur(8px); border-radius: 1.5rem; padding: 1.2rem; text-align: center; transition: 0.2s; cursor: pointer; border: 1px solid rgba(200,48,46,0.5); }
+        .flow-node:hover { background: rgba(200,48,46,0.25); transform: scale(1.02); }
+        .vr-card { background: rgba(8, 6, 12, 0.75); backdrop-filter: blur(8px); border-radius: 1.5rem; padding: 1.5rem; transition: all 0.3s; border-bottom: 3px solid #C8102E; }
+        .vr-card:hover { transform: translateY(-8px); }
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 1.2rem; overflow: hidden; background: #000; margin-top: 1rem; }
+        .video-wrapper video, .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border: none; }
+        .dialog-overlay { position: absolute; bottom: 15px; left: 15px; right: 15px; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); border-radius: 2rem; padding: 12px 18px; color: #ffefcf; font-weight: 500; border-left: 4px solid #C8102E; font-size: 0.9rem; z-index: 15; }
+        .carousel-container { overflow: hidden; border-radius: 1.2rem; margin: 1rem 0; position: relative; }
+        .carousel-imgs { display: flex; transition: transform 0.5s ease; }
+        .carousel-imgs img { width: 100%; flex-shrink: 0; object-fit: cover; height: 180px; background: #2c1a1a; }
+        @media (max-width: 768px) { section { padding: 3rem 1.2rem; } .section-title { font-size: 1.8rem; } }
+        footer { background: #0a0503; text-align: center; padding: 2rem; border-top: 1px solid #C8102E40; font-size: 0.9rem; }
+        .badge-icon { font-size: 2.2rem; color: #C8102E; margin-bottom: 0.8rem; }
+        .fade-in { animation: fadeUp 0.7s ease forwards; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: #1e1714; max-width: 800px; width: 90%; border-radius: 1.8rem; padding: 1.8rem; border-top: 6px solid #C8102E; color: white; }
+        .vr-highlight-btn { background: linear-gradient(95deg, #C8102E, #e65c3a); border: none; padding: 1rem 2rem; font-size: 1.2rem; font-weight: bold; box-shadow: 0 0 15px rgba(200,48,46,0.6); }
+        .poem-quote { font-style: italic; background: rgba(212, 175, 55, 0.15); border-radius: 2rem; padding: 0.5rem 1.2rem; display: inline-block; }
+        .vr-scene-btn.active { background: #C8102E; border-color: #C8102E; color: white; transform: scale(1.02); }
+        .fullscreen-btn { position: absolute; bottom: 20px; right: 20px; z-index: 20; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); border-radius: 2rem; padding: 8px 15px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+        .fullscreen-btn:hover { background: #C8102E; }
+    </style>
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+    <div class="history-slider" id="historySlider">
+        <div class="slide" style="background-image: url('https://picsum.photos/id/102/1920/1080?grayscale')"></div>
+        <div class="slide" style="background-image: url('https://picsum.photos/id/104/1920/1080?grayscale')"></div>
+        <div class="slide" style="background-image: url('https://picsum.photos/id/106/1920/1080')"></div>
+    </div>
+    <div class="main-container">
+        <!-- 首页封面 -->
+        <section id="home" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center;">
+            <div class="glass-card" style="max-width: 1000px; padding: 3rem 2rem; width: 90%;">
+                <div class="poem-quote" style="margin-bottom: 1rem;"><i class="fas fa-leaf"></i> 十步之内，必有芳草 —— 红色文旅 · 薪火相传</div>
+                <h1 style="font-size: clamp(2rem, 6vw, 3.8rem); font-weight: 800; color: #C8102E; margin-bottom: 0.5rem;">湘”遇红境 · VR沉浸式红色文旅体验</h1>
+                <p style="font-size: 1.2rem; letter-spacing: 1px;">以VR穿越百年，让红色历史可玩、可感、可传承</p>
+                <div style="font-weight: 600; margin: 1rem 0;">恰同学少年，风华正茂；以VR为媒，续红色薪火</div>
+                <div style="margin: 2rem 0; display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                    <a href="#product" class="btn btn-primary"><i class="fas fa-play-circle"></i> 了解产品</a>
+                    <a href="#vr-tech" class="btn btn-outline"><i class="fas fa-vr-cardboard"></i> VR技术展示</a>
+                    <a href="#vr-dialog-btn" id="openDialogVRBtn" class="btn btn-gold"><i class="fas fa-comments"></i> 🎭 古今对话VR体验</a>
+                </div>
+                <div style="margin-top: 1rem; font-size: 0.9rem;">红色文旅创新VR沉浸式体验</div>
+            </div>
+        </section>
+
+        <!-- 产品介绍页 -->
+        <section id="product">
+            <h2 class="section-title">项目介绍 · 红色文旅新范式</h2>
+            <div class="glass-card" style="padding: 2rem; margin-bottom: 2rem;">
+                <p><strong>湘”遇红境 · VR沉浸式红色文旅体验</strong> 是对红色沉浸文旅的创新，深度融合红色文化、实景剧本杀与VR数字技术，打破传统红色文旅“单向讲解、被动参观”的枯燥模式。以青年毛泽东在湖南省立第四师范学校的求学经历为核心IP，打造原创红色剧本《恰同学少年·风华救国》，通过自主研发的VR沉浸系统，让玩家穿越百年长沙，亲历历史、完成任务、获取线索，解锁实景剧本专属剧情，实现红色文化的沉浸式、年轻化传承。</p>
+                <p class="mt-2" style="margin-top:1rem;"><i class="fas fa-map-marker-alt" style="color:#C8102E;"></i> <strong>“十步之内，必有芳草”</strong> —— 立足红色文化沃土，辐射伟人故里红色文旅圈，让每一处红色旧址成为沉浸式剧场。</p>
+            </div>
+            <div class="glass-card" style="padding: 2rem;">
+                <h3 style="font-size: 1.8rem; color: #C8102E;"><i class="fas fa-scroll"></i> 主打剧本 · 恰同学少年·风华救国</h3>
+                <p><strong>剧本简介：</strong> 1917年动荡岁月，青年毛泽东、蔡和森等探求真理。玩家化身进步学子，通过VR进入省立第四师范学堂，完成救国暗线，揭开革命密信，亲历觉醒年代。</p>
+                <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 1rem 0;">
+                    <span><i class="fas fa-users"></i> 适合人数：4-8人</span>
+                    <span><i class="fas fa-hourglass-half"></i> 体验时长：120-150分钟</span>
+                </div>
+                <h4>四大阵营：革新派·热血救国 / 文墨派·思想觉醒 / 行动派·街头暗哨 / 守护者·情报解密</h4>
+            </div>
+            <h3 style="margin-top: 2rem; font-size: 1.8rem;">完整体验流程</h3>
+            <div class="grid-3" id="flowchart" style="grid-template-columns: repeat(auto-fit, minmax(160px,1fr));">
+                <div class="flow-node" data-detail="换装抽取角色服装，领取任务手环，沉浸前奏。" data-title="换装启程"><i class="fas fa-tshirt" style="font-size: 2rem;"></i><br>① 换装启程</div>
+                <div class="flow-node" data-detail="佩戴PICO VR一体机，穿越百年长沙，与青年毛泽东对话，完成三大红色任务。" data-title="VR前置沉浸"><i class="fas fa-vr-cardboard" style="font-size: 2rem;"></i><br>② VR前置沉浸</div>
+                <div class="flow-node" data-detail="VR任务完成后系统发放专属线索信物（数字二维码+实体信物），解锁实景关键剧情。" data-title="获取线索信物"><i class="fas fa-key" style="font-size: 2rem;"></i><br>③ 获取线索信物</div>
+                <div class="flow-node" data-detail="在第四师范旧址实景中演绎剧情，AR扫描场景触发隐藏记忆，推动主线。" data-title="实景剧本演绎"><i class="fas fa-theater-masks" style="font-size: 2rem;"></i><br>④ 实景剧本演绎</div>
+                <div class="flow-node" data-detail="结局抉择，重温入团/党誓词，历史情感升华。" data-title="剧情升华"><i class="fas fa-heart" style="font-size: 2rem;"></i><br>⑤ 剧情升华</div>
+                <div class="flow-node" data-detail="获得奖励线索，可设立红色纪念品文创，永久记录红色足迹。" data-title="奖励线索发放"><i class="fas fa-certificate" style="font-size: 2rem;"></i><br>⑥ 奖励线索发放</div>
+            </div>
+        </section>
+
+        <!-- VR技术核心展示页 -->
+        <section id="vr-tech">
+            <h2 class="section-title">VR技术 · 穿越百年的沉浸体验</h2>
+            <div class="glass-card" style="padding: 2rem; margin-bottom: 2rem;">
+                <p><strong>技术定位：</strong>研发《湘”遇红境 · VR沉浸式红色文旅体验系统V1.0》，数字孪生 + AI语音交互，还原百年长沙红色记忆。</p>
+            </div>
+
+            <!-- ★★★ 360°全景VR沉浸区（使用提供的4个链接，按钮名称已修改） ★★★ -->
+            <div class="glass-card" style="padding: 1.8rem; margin-bottom: 2rem; background: linear-gradient(145deg, #0f0b09, #1c100c);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                    <h3 style="color: #d4af37;"><i class="fas fa-vr-cardboard"></i> 360°全景VR · 实景沉浸体验</h3>
+                    <div class="fullscreen-btn" id="vrFullscreenBtn"><i class="fas fa-expand"></i> 全屏观看</div>
+                </div>
+                <p style="margin-bottom: 1rem;">鼠标拖拽旋转视角，身临其境感受百年红色地标 | 点击下方展厅按钮立即穿越</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.8rem; justify-content: center; margin-bottom: 1.5rem;">
+                    <button class="btn btn-outline vr-scene-btn active" data-url="https://vr.3d66.com/next/vr/view/8035107?vr_img_id=38223006">🏛️ 救国议题·议事决案厅</button>
+                    <button class="btn btn-outline vr-scene-btn" data-url="https://vr.3d66.com/next/vr/view/8035107?vr_img_id=38223007">⚔️ 阵营抉择·任务序章廊</button>
+                    <button class="btn btn-outline vr-scene-btn" data-url="https://vr.3d66.com/next/vr/view/8035107?vr_img_id=38223008">🗣️ 古今对话·青年救国厅</button>
+                    <button class="btn btn-outline vr-scene-btn" data-url="https://vr.3d66.com/next/vr/view/8035107?vr_img_id=38223009">📜 恰同学少年·风华救国馆</button>
+                </div>
+                <div class="video-wrapper" id="vrPanoramaWrapper" style="padding-bottom: 56.25%;">
+                    <iframe id="vrPanoramaIframe" src="https://vr.3d66.com/next/vr/view/8035107?vr_img_id=38223006" 
+                            allowfullscreen allow="vr; xr; accelerometer; gyroscope; autoplay; fullscreen" 
+                            title="湘”遇红境 · VR全景"></iframe>
+                </div>
+                <p style="margin-top: 12px; font-size: 0.8rem; text-align: center; color: #e0bc7c;"><i class="fas fa-mouse-pointer"></i> 支持鼠标拖拽/手机陀螺仪 | 沉浸式探索历史场景，与剧本线索深度绑定</p>
+            </div>
+
+            <!-- 古今对话·毛泽东学习场景区 -->
+            <div class="glass-card" style="padding: 1.8rem; margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <h3 style="color: #d4af37;"><i class="fas fa-history"></i> 古今对话 · 毛泽东在湖南第一师范</h3>
+                    <button id="vrDialogBtn" class="btn btn-primary vr-highlight-btn"><i class="fas fa-comment-dots"></i> 沉浸式古今VR游戏体验</button>
+                </div>
+                <p style="margin: 1rem 0 0.5rem;">VR复原1917年第四师范第八班教室，与青年毛泽东跨时空对话，从历史中汲取奋进力量。</p>
+                <div class="video-wrapper">
+                    <video id="maoVideo" controls autoplay muted loop playsinline style="width:100%">
+                         <source src="dialog_video.mp4" type="video/mp4">
+                    您的浏览器不支持HTML5视频播放。
+                   </video>
+                    <div class="dialog-overlay">
+                        <span id="dialogText">🎙️ 青年毛泽东：“今日之责任，不在他人，而全在我少年。诸君，愿与我一同探寻救国之道否？”</span>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; font-size: 0.8rem; text-align: center; color: #e0bc7c;"><i class="fas fa-video"></i> AI智能交互 · 红色任务线索在此解锁</div>
+            </div>
+
+            <!-- 三大核心功能卡片 -->
+            <div class="grid-3">
+                <div class="vr-card">
+                    <i class="fas fa-city badge-icon"></i>
+                    <h3>历史场景数字孪生</h3>
+                    <p>1:1还原湖南第一师范老校门、橘子洲头、湘江渡口，光影级复刻百年长沙。</p>
+                </div>
+                <div class="vr-card">
+                    <i class="fas fa-comments badge-icon"></i>
+                    <h3>虚拟先辈智能交互</h3>
+                    <p>可与青年毛泽东、杨昌济等NPC语音对话、触发剧情，AI多轮情感交互。</p>
+                </div>
+                <div class="vr-card">
+                    <i class="fas fa-tasks badge-icon"></i>
+                    <h3>红色任务驱动</h3>
+                    <p>拾取《新青年》、收集救国语录、完成强国宣誓，3大任务获取实景剧本线索。</p>
+                </div>
+            </div>
+
+            <!-- VR与剧本融合逻辑文案 -->
+            <div class="glass-card" style="padding: 2rem; margin: 2rem 0;">
+                <h3><i class="fas fa-puzzle-piece"></i> VR与剧本深度融合闭环</h3>
+                <p>项目首创「VR前置沉浸+实景剧本演绎」的完整体验闭环：玩家换装后通过VR系统完成历史沉浸，在百年前的一师场景与先辈交互，完成红色任务获取专属线索信物；退出VR后，线索信物直接解锁实景剧本的专属剧情，实现“过去与未来的历史对话”。</p>
+                <div style="margin-top: 20px; background: rgba(200,16,46,0.3); border-radius: 1rem; padding: 1rem; text-align: center;"><i class="fas fa-exchange-alt"></i> VR产出线索 → 解锁实景专属剧情 → 影响结局走向</div>
+            </div>
+            <!-- 完整演示预告 -->
+            <div class="glass-card" style="padding: 1.5rem;">
+                <h3>VR体验完整演示（先导预告）</h3>
+                <div class="video-wrapper">
+                    <video controls poster="https://picsum.photos/id/66/1280/720">
+                        <source src="log.mp4" type="video/mp4">
+                        后续可替换为薪火剧场VR体验实录视频
+                    </video>
+                </div>
+                <p class="mt-2" style="margin-top:8px;">* 完整版VR沉浸交互演示即将上线，敬请期待</p>
+            </div>
+        </section>
+
+        <!-- 创新优势与社会价值 -->
+        <section id="innovation">
+            <h2 class="section-title">创新价值 · 赋能红色文化传承</h2>
+            <div class="grid-3">
+                <div class="glass-card" style="padding: 1.5rem; text-align: center;"><i class="fas fa-microchip" style="font-size: 2.5rem; color: #C8102E;"></i><h3>内容+科技融合创新</h3><p>VR+AR+实景，独创红色沉浸式教育产品，让历史活起来。</p></div>
+                <div class="glass-card" style="padding: 1.5rem; text-align: center;"><i class="fas fa-layer-group" style="font-size: 2.5rem; color: #C8102E;"></i><h3>产品体系创新</h3><p>“红色剧本+VR系统+研学课程+数字证书”完整矩阵，可复制性强。</p></div>
+                <div class="glass-card" style="padding: 1.5rem; text-align: center;"><i class="fas fa-chalkboard-user" style="font-size: 2.5rem; color: #C8102E;"></i><h3>IP渠道创新</h3><p>深度绑定独家红色IP，联动全国红色研学基地，抢占市场高地。</p></div>
+            </div>
+            <div class="glass-card" style="margin-top: 2rem; padding: 1.5rem;">
+                <h3>社会价值 & 红色文旅贡献</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 2rem;">
+                    <div style="flex:1; min-width: 200px;"><canvas id="impactChart" width="300" height="200" style="max-width: 100%; background: #1f1816; border-radius: 1rem;"></canvas><p class="text-center">年服务人次 & 带动就业岗位</p></div>
+                    <div style="flex:1;"><ul><li><i class="fas fa-graduation-cap"></i> 思政教育辐射：预计年触达学生6w+</li><li><i class="fas fa-briefcase"></i> 提供实习/就业岗位：90+ (VR开发/剧本编导/运营)</li><li><i class="fas fa-flag-checkered"></i> 助推红色文旅升级：联动核心红色景区走廊</li><li><i class="fas fa-leaf"></i> “十步之内，必有芳草”品牌赋能，打造红色文旅新名片</li></ul></div>
+                </div>
+            </div>
+            <div class="grid-3" style="margin-top: 2rem;">
+                <div class="glass-card"><i class="fas fa-copyright"></i> <strong>VR系统</strong> · 红色青年VR系统V1.0</div>
+                <div class="glass-card"><i class="fas fa-file-alt"></i> <strong>改编剧本</strong> 《恰同学少年》</div>
+                <div class="glass-card"><i class="fas fa-university"></i> <strong>IP授权</strong> + 研学渠道壁垒</div>
+            </div>
+        </section>
+
+        <!-- 联系团队页 -->
+        <section id="team">
+            <h2 class="section-title">薪火团队 · 红色筑梦者</h2>
+            <div class="glass-card" style="padding: 2rem;">
+                <div class="grid-3" style="gap: 1.5rem;">
+                    <div><i class="fas fa-user-circle fa-2x"></i><h4>项目负责人</h4><p>“湘”遇红境团队<br>红色文旅创业沉浸式体验</p></div>
+                    <div><i class="fas fa-laptop-code fa-2x"></i><h4>VR技术总监</h4><p>“湘”遇红境团队<br>Unity开发/图形学方向</p></div>
+                    <div><i class="fas fa-pen-fancy fa-2x"></i><h4>剧本总编</h4><p>“湘”遇红境团队<br>红色剧本孵化人</p></div>
+                </div>
+                <hr style="margin: 1.5rem 0; border-color:#C8102E40;">
+                <p><strong>指导教师：</strong> “湘”遇红境 · VR沉浸式红色文旅团队</p>
+                <p><strong>合作意向：</strong> 诚邀红色景区、研学机构、投资方合作，共同打造红色沉浸式文旅标杆。</p>
+            </div>
+        </section>
+
+        <footer>
+            <p>©2026“湘”遇红境 · 红色文旅创新体验 | 十步之内，必有芳草 · 以VR续写红色薪火</p>
+        </footer>
+    </div>
+
+    <!-- 模态框：古今对话专用弹窗 -->
+    <div id="vrDialogModal" class="modal">
+        <div class="modal-content">
+            <h3 style="color:#C8102E;"><i class="fas fa-comments"></i> 古今 · VR沉浸游戏体验</h3>
+            <div class="video-wrapper" style="margin: 1rem 0;">
+                <video id="dialogVideo" controls autoplay muted loop style="width:100%">
+                    <source src="play.mp4" type="video/mp4">
+                </video>
+            </div>
+            <div style="background:#2c1c16; border-radius: 1rem; padding: 1rem; margin: 1rem 0;">
+                <p><strong>🎙️沉浸式历史还原：用3D建模/实景拍摄还原了红色历史场馆相关的革命旧址、人物展厅，玩家可以第一视角“走进”历史现场</p>
+                <p><strong>✨任务线场景联动：把你之前的3大任务（拾取《新青年》、收集救国语录、强国宣誓）和场景绑定，比如在《新青年》相关的展柜位置，交互的拾取点，玩家走到这里自动触发任务，完成后解锁下一个场景</p>
+                <p><strong>🤝 互动式剧情体验：带任务线（拾取《新青年》、强国宣誓）、古今剧本杀式体验</p>
+            </div>
+            <button class="btn btn-primary" onclick="closeVRDialog()">关闭体验</button>
+        </div>
+    </div>
+
+    <script>
+        // 粒子动画
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        class Particle {
+            constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 2.5 + 0.5; this.speedX = (Math.random() - 0.5) * 0.4; this.speedY = (Math.random() - 0.5) * 0.2 + 0.2; this.color = `rgba(200, 48, 46, ${Math.random() * 0.5 + 0.1})`; }
+            update() { this.x += this.speedX; this.y += this.speedY; if (this.x > canvas.width) this.x = 0; if (this.x < 0) this.x = canvas.width; if (this.y > canvas.height) this.y = 0; if (this.y < 0) this.y = canvas.height; }
+            draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fillStyle = this.color; ctx.fill(); }
+        }
+        function initParticles() { particles = []; for(let i=0;i<180;i++) particles.push(new Particle()); }
+        function animateParticles() { ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animateParticles); }
+        initParticles(); animateParticles();
+
+        // 历史画卷淡入淡出
+        let slideIdx = 0;
+        const slides = document.querySelectorAll('.history-slider .slide');
+        if(slides.length) { slides[0].classList.add('active'); setInterval(() => { slides[slideIdx].classList.remove('active'); slideIdx = (slideIdx + 1) % slides.length; slides[slideIdx].classList.add('active'); }, 5000); }
+
+        // 流程图节点点击弹窗
+        function closeModal() { document.getElementById('flowModal').style.display = 'none'; }
+        window.closeModal = closeModal;
+        document.querySelectorAll('.flow-node').forEach(node => {
+            node.addEventListener('click', () => {
+                const title = node.getAttribute('data-title') || node.innerText.trim();
+                const detail = node.getAttribute('data-detail') || '环节详细说明待补充。';
+                document.getElementById('modalTitle').innerText = title;
+                document.getElementById('modalDetail').innerText = detail;
+                document.getElementById('flowModal').style.display = 'flex';
+            });
+        });
+
+        // 古今对话VR模态框
+        const vrDialogModal = document.getElementById('vrDialogModal');
+        function openVRDialog() { vrDialogModal.style.display = 'flex'; const vid = document.getElementById('dialogVideo'); if(vid) vid.play(); }
+        function closeVRDialog() { vrDialogModal.style.display = 'none'; }
+        window.closeVRDialog = closeVRDialog;
+        document.getElementById('vrDialogBtn')?.addEventListener('click', openVRDialog);
+        document.getElementById('openDialogVRBtn')?.addEventListener('click', (e) => { e.preventDefault(); openVRDialog(); });
+        vrDialogModal?.addEventListener('click', (e) => { if(e.target === vrDialogModal) closeVRDialog(); });
+
+        // 视频动态字幕
+        const dialogTextSpan = document.getElementById('dialogText');
+        const dialogs = [
+            "🎙️ 青年毛泽东：“今日之责任，不在他人，而全在我少年。诸君，愿与我一同探寻救国之道否？”",
+            "📖 毛泽东：“我在一师求学时，常与蔡和森讨论时局，你们那个时代，中国可强大？”",
+            "✨ 现代玩家（VR交互）：“先生，今日中国繁荣昌盛，我们正用数字技术让红色精神代代相传！”",
+            "🤝 毛泽东：“薪火不灭，奋斗以成！VR再现历史，妙哉！恰同学少年，风华正茂！”"
+        ];
+        let dialogIdx = 0;
+        if(dialogTextSpan) {
+            setInterval(() => {
+                dialogIdx = (dialogIdx + 1) % dialogs.length;
+                dialogTextSpan.innerText = dialogs[dialogIdx];
+            }, 5000);
+        }
+
+        // 图表
+        const ctxChart = document.getElementById('impactChart')?.getContext('2d');
+        if(ctxChart) { new Chart(ctxChart, { type: 'bar', data: { labels: ['年服务人次(万)', '提供岗位(个)'], datasets: [{ label: '社会价值数据', data: [9.2, 86], backgroundColor: ['#C8102E', '#e6a017'], borderRadius: 8 }] }, options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { labels: { color: '#f0ede8' } } }, scales: { y: { ticks: { color: '#ddd' }, grid: { color: '#3a2a2a' } }, x: { ticks: { color: '#f0ede8' } } } } }); }
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) { e.preventDefault(); const target = document.querySelector(this.getAttribute('href')); if(target) target.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+        });
+        const sections = document.querySelectorAll('section');
+        const observer = new IntersectionObserver((entries) => { entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('fade-in'); }); }, { threshold: 0.2 });
+        sections.forEach(s => observer.observe(s));
+        document.getElementById('home')?.classList.add('fade-in');
+
+        // 自动播放视频兼容
+        const maoVideo = document.getElementById('maoVideo');
+        if(maoVideo) maoVideo.play().catch(e=>console.log("autoplay prevented"));
+
+        // VR全景场景切换逻辑
+        const sceneBtns = document.querySelectorAll('.vr-scene-btn');
+        const iframe = document.getElementById('vrPanoramaIframe');
+        sceneBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const url = this.getAttribute('data-url');
+                iframe.src = url;
+                sceneBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // 全屏功能
+        const fullscreenBtn = document.getElementById('vrFullscreenBtn');
+        const wrapper = document.getElementById('vrPanoramaWrapper');
+        fullscreenBtn.addEventListener('click', () => {
+            if (wrapper.requestFullscreen) {
+                wrapper.requestFullscreen();
+            } else if (wrapper.webkitRequestFullscreen) {
+                wrapper.webkitRequestFullscreen();
+            }
+        });
+    </script>
+
+    <!-- 模态框DOM -->
+    <div id="flowModal" class="modal" style="display:none;">
+        <div class="modal-content"><h3 id="modalTitle"></h3><p id="modalDetail"></p><button class="btn btn-primary" onclick="closeModal()">关闭</button></div>
+    </div>
+</body>
+</html>
